@@ -12,8 +12,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 
     ::testui testui{};
 
-    testui.initialize("uiclass");
-    testui.create(hInstance, "test-ui");
+    testui.initialize(L"一个类");
+    testui.create(hInstance, L"我窗口");
 
     testui.start();
     return 0;
