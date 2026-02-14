@@ -20,12 +20,11 @@ public:
         
         RegisterClassExW(&this->m_wc);
     }
-    void create(::HINSTANCE hInstance, LPCWSTR WindowName, int Width = 800, int Height = 600)
+    void create(::HINSTANCE hInstance, LPCWSTR title, int width = 800, int height = 600)
     {
-        int x = GetSystemMetrics(SM_CXSCREEN);
-        int y = GetSystemMetrics(SM_CYSCREEN);
+        ::POINT screen = {GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)};
 
-        ::HWND hwnd = CreateWindowExW(0, this->m_wc.lpszClassName, WindowName, WS_OVERLAPPEDWINDOW, (x - Width) / 2, (y - Height) / 2, Width, Height, NULL, NULL, hInstance, this);
+        ::HWND hwnd = CreateWindowExW(0, this->m_wc.lpszClassName, title, WS_OVERLAPPEDWINDOW, (screen.x - width) / 2, (screen.y - height) / 2, width, height, NULL, NULL, hInstance, this);
 
         ShowWindow(hwnd, SW_SHOW);
     }
@@ -62,13 +61,10 @@ private:
         {
             case WM_CREATE:
             {
-                ::object object{1};
-                object.set_size({100, 150}, 100);
-                this->m_objects.emplace_back(object);
-                
-                ::object object{2};
-                object.set_size({50, 100}, 100);
-                this->m_objects.emplace_back(object);
+                this->m_objects.emplace_back(::object(1).set_size({125, 175}, 100));
+                this->m_objects.emplace_back(::object(2).set_size({100, 150}, 100));
+                this->m_objects.emplace_back(::object(3).set_size({50, 100}, 100));
+                this->m_objects.emplace_back(::object(4).set_size({25, 75}, 100));
             }
             case WM_PAINT:
             {
@@ -89,7 +85,7 @@ private:
                 ::POINT point = {LOWORD(lParam), HIWORD(lParam)};
 
                 for (::object object : this->m_objects)
-                    if (object.is_inside(point)) printf("clicked #%d circle!\n", object.m_id/*make fun called get_id()*/);
+                    if (object.is_inside(point)) printf("clicked #%d circle!\n", object.get_id());
                 return 0;
             }
             case WM_DESTROY:

@@ -7,7 +7,6 @@ class object
 {
 public:
     object(unsigned id) : m_id(id) {}
-    unsigned m_id;
 
     void circle(HDC hdc, ::POINT point, LONG size, COLORREF color = RGB(255, 255, 255))
     {
@@ -40,9 +39,20 @@ public:
 
         return offset.x * offset.x + offset.y * offset.y <= radius * radius;
     }
-    void set_size(::POINT point, LONG size) { this->m_rect = {point.x, point.y, point.x + size, point.y + size}; }
+    object& set_size(::POINT point, LONG size) 
+    { 
+        this->m_rect = {point.x, point.y, point.x + size, point.y + size}; 
+
+        return *this;
+    }
+    unsigned get_id()
+    {
+        return this->m_id;
+    }
 private:
     ::RECT m_rect;
+
+    unsigned m_id;
 };
 
 #endif
