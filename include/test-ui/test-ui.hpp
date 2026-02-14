@@ -4,6 +4,7 @@
 #include <windows.h>
 #include "object/object.hpp"
 #include <stdio.h>
+#include <vector>
 
 class testui
 {
@@ -44,11 +45,13 @@ public:
 private:
     static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
     {
-        testui *pthis = (testui*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+        ::testui *pthis = (::testui*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
         
-        if (msg == WM_NCCREATE) {
-            CREATESTRUCT *pcs = (CREATESTRUCT*)lParam;
-            pthis = (testui*)pcs->lpCreateParams;
+        if (msg == WM_NCCREATE) 
+        {
+            const ::CREATESTRUCT *pcs = (const ::CREATESTRUCT*)lParam;
+
+            pthis = (::testui*)pcs->lpCreateParams;
             SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pthis);
         }
         return (pthis) ? pthis->HandleMessage(hwnd, msg, wParam, lParam) : DefWindowProc(hwnd, msg, wParam, lParam);
@@ -57,12 +60,26 @@ private:
     {
         switch(msg) 
         {
+            case WM_CREATE:
+            {
+                ::object object{1};
+                object.set_size({100, 150}, 100);
+                this->m_objects.emplace_back(object);
+                
+                ::object object{2};
+                object.set_size({50, 100}, 100);
+                this->m_objects.emplace_back(object);
+            }
             case WM_PAINT:
             {
                 ::PAINTSTRUCT ps{};
                 HDC hdc = BeginPaint(hwnd, &ps);
 
-                this->m_object.circle(hdc);
+                for (::object object : this->m_objects)
+                {
+                    object.circle(hdc, object.axis(), object.diameter().x);
+                    object.text(hdc, L"a circle");
+                }
 
                 EndPaint(hwnd, &ps);
                 return 0;
@@ -71,7 +88,8 @@ private:
             {
                 ::POINT point = {LOWORD(lParam), HIWORD(lParam)};
 
-                if (this->m_object.is_inside(point)) puts("clicked the circle!");
+                for (::object object : this->m_objects)
+                    if (object.is_inside(point)) printf("clicked #%d circle!\n", object.m_id/*make fun called get_id()*/);
                 return 0;
             }
             case WM_DESTROY:
@@ -82,10 +100,10 @@ private:
         }
         return DefWindowProc(hwnd, msg, wParam, lParam);
     }
-    
-    ::object m_object; // @todo multiple handled objects
-    ::HINSTANCE m_hInstance = GetModuleHandle(nullptr);
-    ::WNDCLASSEXW m_wc{};
+    std::vector<::object> m_objects;
+
+    ::HINSTANCE   m_hInstance = GetModuleHandle(nullptr);
+    ::WNDCLASSEXW m_wc;
 };
 
 #endif // TEST_UI_HPP

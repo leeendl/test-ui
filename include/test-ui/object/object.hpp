@@ -6,30 +6,43 @@
 class object
 {
 public:
-    void circle(HDC hdc, COLORREF color = RGB(255, 255, 255)) const
+    object(unsigned id) : m_id(id) {}
+    unsigned m_id;
+
+    void circle(HDC hdc, ::POINT point, LONG size, COLORREF color = RGB(255, 255, 255))
     {
-        HBRUSH hbrush = CreateSolidBrush(color);
-        SelectObject(hdc, hbrush);
+        this->m_rect = {point.x, point.y, point.x + size, point.y + size};
+
+        HBRUSH brush = CreateSolidBrush(color);
+        SelectObject(hdc, brush);
         
         Ellipse(hdc, m_rect.left, m_rect.top, m_rect.right, m_rect.bottom);
         
-        DeleteObject(hbrush);
+        DeleteObject(brush);
     }
+    void text(HDC hdc, LPCWSTR text)
+    {
+        SIZE size;
+        GetTextExtentPoint32W(hdc, text, sizeof(text), &size);
+    
+        ::POINT scale = {center().x - (size.cx / 2), center().y - (size.cy / 2)}; // scale to fit
+        
+        TextOutW(hdc, scale.x, scale.y, text, sizeof(text));
+    }
+    ::POINT axis() const     { return {m_rect.left, m_rect.top}; }
+    ::POINT diameter() const { return {m_rect.right - m_rect.left, m_rect.bottom - m_rect.top}; }
+    ::POINT center() const   { return {(m_rect.left + m_rect.right) / 2, (m_rect.top + m_rect.bottom) / 2}; }
     
     bool is_inside(::POINT point) const 
     {
-        ::POINT center = {(m_rect.left + m_rect.right) / 2, (m_rect.top + m_rect.bottom) / 2};
-        ::POINT offset = {point.x - center.x, point.y - center.y};
-
-        int radius = this->width() / 2;
+        ::POINT offset = {point.x - center().x, point.y - center().y};
+        LONG    radius = this->diameter().x / 2;
 
         return offset.x * offset.x + offset.y * offset.y <= radius * radius;
     }
-    
-    int width() const { return m_rect.right - m_rect.left; }
-    int height() const { return m_rect.bottom - m_rect.top; }
+    void set_size(::POINT point, LONG size) { this->m_rect = {point.x, point.y, point.x + size, point.y + size}; }
 private:
-    ::RECT m_rect = {0, 0, 75, 75};
+    ::RECT m_rect;
 };
 
 #endif
